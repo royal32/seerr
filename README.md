@@ -1,3 +1,12 @@
+## Fork Information
+- Minor interface tweaks
+  - Sidebar now collapsable (and is by default)
+  - Discover/Movies/Series Buttons to the left of the search bar
+  - The sort order element that looks like a button now *is* a button
+- Removal of people from search results
+  
+
+
 <p align="center">
 <img src="./public/logo_full.svg" alt="Seerr" style="margin: 20px 0;">
 </p>
