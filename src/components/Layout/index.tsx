@@ -1,7 +1,7 @@
 import MobileMenu from '@app/components/Layout/MobileMenu';
 import PullToRefresh from '@app/components/Layout/PullToRefresh';
 import SearchInput from '@app/components/Layout/SearchInput';
-import Sidebar from '@app/components/Layout/Sidebar';
+import Sidebar, { menuMessages } from '@app/components/Layout/Sidebar';
 import UserDropdown from '@app/components/Layout/UserDropdown';
 import UserWarnings from '@app/components/Layout/UserWarnings';
 import useLocale from '@app/hooks/useLocale';
@@ -9,8 +9,10 @@ import useSettings from '@app/hooks/useSettings';
 import { useUser } from '@app/hooks/useUser';
 import { ArrowLeftIcon, Bars3BottomLeftIcon } from '@heroicons/react/24/solid';
 import type { AvailableLocale } from '@server/types/languages';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { useIntl } from 'react-intl';
 import useSWR from 'swr';
 
 type LayoutProps = {
@@ -19,9 +21,11 @@ type LayoutProps = {
 
 const Layout = ({ children }: LayoutProps) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktopSidebarOpen, setDesktopSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user } = useUser();
   const router = useRouter();
+  const intl = useIntl();
   const { currentSettings } = useSettings();
   const { setLocale } = useLocale();
   const { data: requestResponse, mutate: revalidateRequestsCount } = useSWR(
@@ -71,6 +75,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
       <Sidebar
         open={isSidebarOpen}
+        desktopOpen={isDesktopSidebarOpen}
         setClosed={() => setSidebarOpen(false)}
         pendingRequestsCount={requestResponse?.pending ?? 0}
         openIssuesCount={issueResponse?.open ?? 0}
@@ -86,12 +91,14 @@ const Layout = ({ children }: LayoutProps) => {
         />
       </div>
 
-      <div className="relative mb-16 flex w-0 min-w-0 flex-1 flex-col lg:ml-64">
+      <div
+        className={`relative mb-16 flex w-0 min-w-0 flex-1 flex-col transition-[margin] duration-300 ${isDesktopSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
+          }`}
+      >
         <PullToRefresh />
         <div
-          className={`searchbar fixed left-0 right-0 top-0 z-10 flex flex-shrink-0 transition duration-300 ${
-            isScrolled ? 'bg-gray-700/80' : 'bg-transparent'
-          } lg:left-64`}
+          className={`searchbar fixed left-0 right-0 top-0 z-10 flex flex-shrink-0 transition duration-300 ${isScrolled ? 'bg-gray-700/80' : 'bg-transparent'
+            } ${isDesktopSidebarOpen ? 'lg:left-64' : 'lg:left-0'}`}
           style={{
             backdropFilter: isScrolled ? 'blur(5px)' : undefined,
             WebkitBackdropFilter: isScrolled ? 'blur(5px)' : undefined,
@@ -99,9 +106,8 @@ const Layout = ({ children }: LayoutProps) => {
         >
           <div className="flex flex-1 items-center justify-between px-4 md:pl-4 md:pr-4">
             <button
-              className={`mr-2 hidden text-white sm:block ${
-                isScrolled ? 'opacity-90' : 'opacity-70'
-              } transition duration-300 focus:outline-none lg:hidden`}
+              className={`mr-2 hidden flex-shrink-0 text-white sm:block ${isScrolled ? 'opacity-90' : 'opacity-70'
+                } transition duration-300 focus:outline-none lg:hidden`}
               aria-label="Open sidebar"
               onClick={() => setSidebarOpen(true)}
               data-testid="sidebar-toggle"
@@ -109,13 +115,59 @@ const Layout = ({ children }: LayoutProps) => {
               <Bars3BottomLeftIcon className="h-7 w-7" />
             </button>
             <button
-              className={`mr-2 text-white ${
-                isScrolled ? 'opacity-90' : 'opacity-70'
-              } pwa-only transition duration-300 hover:text-white focus:text-white focus:outline-none`}
+              className={`mr-2 hidden flex-shrink-0 text-white ${isScrolled ? 'opacity-90' : 'opacity-70'
+                } transition duration-300 focus:outline-none lg:block`}
+              aria-label={
+                isDesktopSidebarOpen ? 'Close sidebar' : 'Open sidebar'
+              }
+              aria-expanded={isDesktopSidebarOpen}
+              onClick={() => setDesktopSidebarOpen((isOpen) => !isOpen)}
+              data-testid="desktop-sidebar-toggle"
+            >
+              <Bars3BottomLeftIcon className="h-7 w-7" />
+            </button>
+            <button
+              className={`mr-2 text-white ${isScrolled ? 'opacity-90' : 'opacity-70'
+                } pwa-only transition duration-300 hover:text-white focus:text-white focus:outline-none`}
               onClick={() => router.back()}
             >
               <ArrowLeftIcon className="w-7" />
             </button>
+            <nav
+              aria-label="Browse media"
+              className="mr-3 hidden flex-shrink-0 items-center gap-1 md:flex"
+            >
+              <Link
+                href="/"
+                className={`rounded-md px-3 py-2 text-sm font-medium text-white transition duration-150 ease-in-out focus:outline-none ${router.pathname === '/'
+                  ? 'bg-gradient-to-br from-indigo-600 to-purple-600'
+                  : 'hover:bg-gray-700 focus:bg-gray-700'
+                  }`}
+                data-testid="header-menu-all"
+              >
+                {intl.formatMessage(menuMessages.dashboard)}
+              </Link>
+              <Link
+                href="/discover/movies"
+                className={`rounded-md px-3 py-2 text-sm font-medium text-white transition duration-150 ease-in-out focus:outline-none ${router.pathname === '/discover/movies'
+                  ? 'bg-gradient-to-br from-indigo-600 to-purple-600'
+                  : 'hover:bg-gray-700 focus:bg-gray-700'
+                  }`}
+                data-testid="header-menu-movies"
+              >
+                {intl.formatMessage(menuMessages.browsemovies)}
+              </Link>
+              <Link
+                href="/discover/tv"
+                className={`rounded-md px-3 py-2 text-sm font-medium text-white transition duration-150 ease-in-out focus:outline-none ${router.pathname === '/discover/tv'
+                  ? 'bg-gradient-to-br from-indigo-600 to-purple-600'
+                  : 'hover:bg-gray-700 focus:bg-gray-700'
+                  }`}
+                data-testid="header-menu-series"
+              >
+                {intl.formatMessage(menuMessages.browsetv)}
+              </Link>
+            </nav>
             <SearchInput />
             <div className="flex items-center">
               <UserDropdown />

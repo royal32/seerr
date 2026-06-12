@@ -34,6 +34,7 @@ export const menuMessages = defineMessages('components.Layout.Sidebar', {
 
 interface SidebarProps {
   open?: boolean;
+  desktopOpen?: boolean;
   setClosed: () => void;
   pendingRequestsCount: number;
   openIssuesCount: number;
@@ -120,6 +121,7 @@ const SidebarLinks: SidebarLinkProps[] = [
 
 const Sidebar = ({
   open,
+  desktopOpen,
   setClosed,
   pendingRequestsCount,
   openIssuesCount,
@@ -248,7 +250,17 @@ const Sidebar = ({
         </Transition>
       </div>
 
-      <div className="fixed bottom-0 left-0 top-0 z-30 hidden lg:flex lg:flex-shrink-0">
+      <Transition
+        as="div"
+        show={desktopOpen}
+        className="fixed bottom-0 left-0 top-0 z-30 hidden lg:flex lg:flex-shrink-0"
+        enter="transition-transform duration-300 ease-in-out"
+        enterFrom="-translate-x-full"
+        enterTo="translate-x-0"
+        leave="transition-transform duration-300 ease-in-out"
+        leaveFrom="translate-x-0"
+        leaveTo="-translate-x-full"
+      >
         <div className="sidebar flex w-64 flex-col">
           <div className="flex h-0 flex-1 flex-col">
             <div className="flex flex-1 flex-col overflow-y-auto pb-4">
@@ -330,7 +342,7 @@ const Sidebar = ({
             </div>
           </div>
         </div>
-      </div>
+      </Transition>
     </>
   );
 };
