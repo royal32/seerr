@@ -153,30 +153,33 @@ export const mapSearchResults = (
   )[],
   media?: Media[]
 ): Results[] =>
-  results.map((result) => {
-    switch (result.media_type) {
-      case 'movie':
-        return mapMovieResult(
-          result,
-          media?.find(
-            (req) =>
-              req.tmdbId === result.id && req.mediaType === MainMediaType.MOVIE
-          )
-        );
-      case 'tv':
-        return mapTvResult(
-          result,
-          media?.find(
-            (req) =>
-              req.tmdbId === result.id && req.mediaType === MainMediaType.TV
-          )
-        );
-      case 'collection':
-        return mapCollectionResult(result);
-      default:
-        return mapPersonResult(result);
-    }
-  });
+  results
+    .filter((result) => result.media_type !== 'person')
+    .map((result) => {
+      switch (result.media_type) {
+        case 'movie':
+          return mapMovieResult(
+            result,
+            media?.find(
+              (req) =>
+                req.tmdbId === result.id &&
+                req.mediaType === MainMediaType.MOVIE
+            )
+          );
+        case 'tv':
+          return mapTvResult(
+            result,
+            media?.find(
+              (req) =>
+                req.tmdbId === result.id && req.mediaType === MainMediaType.TV
+            )
+          );
+        case 'collection':
+          return mapCollectionResult(result);
+        default:
+          return mapPersonResult(result);
+      }
+    });
 
 export const mapMovieDetailsToResult = (
   movieDetails: TmdbMovieDetails
