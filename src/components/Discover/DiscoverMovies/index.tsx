@@ -6,13 +6,18 @@ import type { FilterOptions } from '@app/components/Discover/constants';
 import {
   countActiveFilters,
   prepareFilterValues,
+  toggleSortDirection,
 } from '@app/components/Discover/constants';
 import FilterSlideover from '@app/components/Discover/FilterSlideover';
 import useDiscover from '@app/hooks/useDiscover';
 import { useUpdateQueryParams } from '@app/hooks/useUpdateQueryParams';
 import ErrorPage from '@app/pages/_error';
 import defineMessages from '@app/utils/defineMessages';
-import { BarsArrowDownIcon, FunnelIcon } from '@heroicons/react/24/solid';
+import {
+  BarsArrowDownIcon,
+  BarsArrowUpIcon,
+  FunnelIcon,
+} from '@heroicons/react/24/solid';
 import type { SortOptions as TMDBSortOptions } from '@server/api/themoviedb';
 import type { MovieResult } from '@server/models/Search';
 import { useRouter } from 'next/router';
@@ -31,6 +36,7 @@ const messages = defineMessages('components.Discover.DiscoverMovies', {
   sortTmdbRatingDesc: 'TMDB Rating Descending',
   sortTitleAsc: 'Title (A-Z) Ascending',
   sortTitleDesc: 'Title (Z-A) Descending',
+  sortDirection: 'Toggle Sort Direction',
 });
 
 const SortOptions: Record<string, TMDBSortOptions> = {
@@ -70,6 +76,8 @@ const DiscoverMovies = () => {
   }
 
   const title = intl.formatMessage(messages.discovermovies);
+  const currentSort = preparedFilters.sortBy || SortOptions.PopularityDesc;
+  const isSortAscending = currentSort.endsWith('.asc');
 
   return (
     <>
@@ -78,14 +86,26 @@ const DiscoverMovies = () => {
         <Header>{title}</Header>
         <div className="mt-2 flex flex-grow flex-col sm:flex-row lg:flex-grow-0">
           <div className="mb-2 flex flex-grow sm:mb-0 sm:mr-2 lg:flex-grow-0">
-            <span className="inline-flex cursor-default items-center rounded-l-md border border-r-0 border-gray-500 bg-gray-800 px-3 text-gray-100 sm:text-sm">
-              <BarsArrowDownIcon className="h-6 w-6" />
-            </span>
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center rounded-l-md border border-r-0 border-gray-500 bg-gray-800 px-3 text-gray-100 transition hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+              onClick={() =>
+                updateQueryParams('sortBy', toggleSortDirection(currentSort))
+              }
+              aria-label={intl.formatMessage(messages.sortDirection)}
+              data-testid="sort-direction-toggle"
+            >
+              {isSortAscending ? (
+                <BarsArrowUpIcon className="h-6 w-6" />
+              ) : (
+                <BarsArrowDownIcon className="h-6 w-6" />
+              )}
+            </button>
             <select
               id="sortBy"
               name="sortBy"
               className="rounded-r-only"
-              value={preparedFilters.sortBy || SortOptions.PopularityDesc}
+              value={currentSort}
               onChange={(e) => updateQueryParams('sortBy', e.target.value)}
             >
               <option value={SortOptions.PopularityDesc}>

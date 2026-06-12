@@ -119,6 +119,18 @@ export const QueryFilterOptions = z.object({
 
 export type FilterOptions = z.infer<typeof QueryFilterOptions>;
 
+export const toggleSortDirection = (sortBy: string): string => {
+  if (sortBy.endsWith('.asc')) {
+    return `${sortBy.slice(0, -4)}.desc`;
+  }
+
+  if (sortBy.endsWith('.desc')) {
+    return `${sortBy.slice(0, -5)}.asc`;
+  }
+
+  return sortBy;
+};
+
 export const prepareFilterValues = (
   inputValues: ParsedUrlQuery
 ): FilterOptions => {
