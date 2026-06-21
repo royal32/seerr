@@ -1,6 +1,7 @@
 import PersonCard from '@app/components/PersonCard';
 import TitleCard from '@app/components/TitleCard';
 import TmdbTitleCard from '@app/components/TitleCard/TmdbTitleCard';
+import useOriginalLanguageFilter from '@app/hooks/useOriginalLanguageFilter';
 import { Permission, useUser } from '@app/hooks/useUser';
 import useVerticalScroll from '@app/hooks/useVerticalScroll';
 import globalMessages from '@app/i18n/globalMessages';
@@ -12,7 +13,6 @@ import type {
   PersonResult,
   TvResult,
 } from '@server/models/Search';
-import { useRouter } from 'next/router';
 import { useIntl } from 'react-intl';
 
 type ListViewProps = {
@@ -35,17 +35,13 @@ const ListView = ({
   mutateParent,
 }: ListViewProps) => {
   const intl = useIntl();
-  const router = useRouter();
   const { hasPermission } = useUser();
+  const { originalLanguageFilter } = useOriginalLanguageFilter();
 
   const blocklistVisibility = hasPermission(
     [Permission.MANAGE_BLOCKLIST, Permission.VIEW_BLOCKLIST],
     { type: 'or' }
   );
-  const originalLanguageFilter =
-    typeof router.query.originalLanguage === 'string'
-      ? router.query.originalLanguage
-      : 'en';
   const filteredItems = items?.filter((title) => {
     if (
       originalLanguageFilter !== 'all' &&

@@ -1,4 +1,5 @@
 import useSearchInput from '@app/hooks/useSearchInput';
+import useOriginalLanguageFilter from '@app/hooks/useOriginalLanguageFilter';
 import defineMessages from '@app/utils/defineMessages';
 import {
   LockClosedIcon,
@@ -20,9 +21,12 @@ const SearchInput = () => {
   const intl = useIntl();
   const router = useRouter();
   const { searchValue, setSearchValue, setIsOpen, clear } = useSearchInput();
-  const isEnglishLocked = router.query.originalLanguage !== 'all';
+  const { originalLanguageFilter, setOriginalLanguageFilter } =
+    useOriginalLanguageFilter();
+  const isEnglishLocked = originalLanguageFilter !== 'all';
 
   const toggleEnglishLock = () => {
+    const nextOriginalLanguageFilter = isEnglishLocked ? 'all' : 'en';
     const nextQuery = { ...router.query };
 
     if (isEnglishLocked) {
@@ -31,6 +35,7 @@ const SearchInput = () => {
       delete nextQuery.originalLanguage;
     }
 
+    setOriginalLanguageFilter(nextOriginalLanguageFilter);
     router.replace(
       {
         pathname: router.pathname,

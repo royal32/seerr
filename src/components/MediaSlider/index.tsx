@@ -2,6 +2,7 @@ import ShowMoreCard from '@app/components/MediaSlider/ShowMoreCard';
 import PersonCard from '@app/components/PersonCard';
 import Slider from '@app/components/Slider';
 import TitleCard from '@app/components/TitleCard';
+import useOriginalLanguageFilter from '@app/hooks/useOriginalLanguageFilter';
 import useSettings from '@app/hooks/useSettings';
 import { useUser } from '@app/hooks/useUser';
 import { ArrowRightCircleIcon } from '@heroicons/react/24/outline';
@@ -13,7 +14,6 @@ import type {
   TvResult,
 } from '@server/models/Search';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import useSWRInfinite from 'swr/infinite';
 
@@ -45,11 +45,7 @@ const MediaSlider = ({
 }: MediaSliderProps) => {
   const settings = useSettings();
   const { hasPermission } = useUser();
-  const router = useRouter();
-  const originalLanguageFilter =
-    typeof router.query.originalLanguage === 'string'
-      ? router.query.originalLanguage
-      : 'en';
+  const { originalLanguageFilter } = useOriginalLanguageFilter();
   const { data, error, setSize, size } = useSWRInfinite<MixedResult>(
     (pageIndex: number, previousPageData: MixedResult | null) => {
       if (previousPageData && pageIndex + 1 > previousPageData.totalPages) {

@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useState } from 'react';
 import type { UrlObject } from 'url';
 import useDebouncedState from './useDebouncedState';
+import useOriginalLanguageFilter from './useOriginalLanguageFilter';
 
 type Url = string | UrlObject;
 
@@ -18,6 +19,7 @@ interface SearchObject {
 
 const useSearchInput = (): SearchObject => {
   const router = useRouter();
+  const { originalLanguageFilter } = useOriginalLanguageFilter();
   const [searchOpen, setIsOpen] = useState(false);
   const [lastRoute, setLastRoute] = useState<Nullable<Url>>(null);
   const [searchValue, debouncedValue, setSearchValue] = useDebouncedState(
@@ -33,17 +35,15 @@ const useSearchInput = (): SearchObject => {
    */
   useEffect(() => {
     if (debouncedValue !== '' && searchOpen) {
-      const originalLanguage =
-        typeof router.query.originalLanguage === 'string'
-          ? router.query.originalLanguage
-          : undefined;
-
       if (router.pathname.startsWith('/search')) {
         router.replace({
           pathname: router.pathname,
           query: {
             ...router.query,
             query: debouncedValue,
+            ...(originalLanguageFilter === 'all' && {
+              originalLanguage: originalLanguageFilter,
+            }),
           },
         });
       } else {
@@ -53,7 +53,9 @@ const useSearchInput = (): SearchObject => {
             pathname: '/search',
             query: {
               query: debouncedValue,
-              ...(originalLanguage && { originalLanguage }),
+              ...(originalLanguageFilter === 'all' && {
+                originalLanguage: originalLanguageFilter,
+              }),
             },
           })
           .then(() => window.scrollTo(0, 0));
