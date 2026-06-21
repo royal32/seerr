@@ -33,6 +33,11 @@ const useSearchInput = (): SearchObject => {
    */
   useEffect(() => {
     if (debouncedValue !== '' && searchOpen) {
+      const originalLanguage =
+        typeof router.query.originalLanguage === 'string'
+          ? router.query.originalLanguage
+          : undefined;
+
       if (router.pathname.startsWith('/search')) {
         router.replace({
           pathname: router.pathname,
@@ -46,7 +51,10 @@ const useSearchInput = (): SearchObject => {
         router
           .push({
             pathname: '/search',
-            query: { query: debouncedValue },
+            query: {
+              query: debouncedValue,
+              ...(originalLanguage && { originalLanguage }),
+            },
           })
           .then(() => window.scrollTo(0, 0));
       }

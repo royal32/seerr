@@ -13,6 +13,7 @@ import type {
   TvResult,
 } from '@server/models/Search';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import useSWRInfinite from 'swr/infinite';
 
@@ -44,6 +45,11 @@ const MediaSlider = ({
 }: MediaSliderProps) => {
   const settings = useSettings();
   const { hasPermission } = useUser();
+  const router = useRouter();
+  const originalLanguageFilter =
+    typeof router.query.originalLanguage === 'string'
+      ? router.query.originalLanguage
+      : 'en';
   const { data, error, setSize, size } = useSWRInfinite<MixedResult>(
     (pageIndex: number, previousPageData: MixedResult | null) => {
       if (previousPageData && pageIndex + 1 > previousPageData.totalPages) {
@@ -82,6 +88,15 @@ const MediaSlider = ({
     );
   }
 
+  if (originalLanguageFilter !== 'all') {
+    titles = titles.filter(
+      (title) =>
+        title.mediaType === 'person' ||
+        title.originalLanguage === originalLanguageFilter ||
+        title.mediaInfo !== undefined
+    );
+  }
+
   useEffect(() => {
     if (
       titles.length < 24 &&
@@ -106,6 +121,10 @@ const MediaSlider = ({
     [Permission.MANAGE_BLOCKLIST, Permission.VIEW_BLOCKLIST],
     { type: 'or' }
   );
+  const languageAwareLinkUrl =
+    linkUrl && originalLanguageFilter === 'all'
+      ? `${linkUrl}${linkUrl.includes('?') ? '&' : '?'}originalLanguage=all`
+      : linkUrl;
 
   const finalTitles = titles
     .slice(0, 20)
@@ -162,10 +181,10 @@ const MediaSlider = ({
       }
     });
 
-  if (linkUrl && titles.length > 20) {
+  if (languageAwareLinkUrl && titles.length > 20) {
     finalTitles.push(
       <ShowMoreCard
-        url={linkUrl}
+        url={languageAwareLinkUrl}
         posters={titles
           .slice(20, 24)
           .map((title) =>
@@ -178,8 +197,11 @@ const MediaSlider = ({
   return (
     <>
       <div className="slider-header">
-        {linkUrl ? (
-          <Link href={linkUrl} className="slider-title min-w-0 pr-16">
+        {languageAwareLinkUrl ? (
+          <Link
+            href={languageAwareLinkUrl}
+            className="slider-title min-w-0 pr-16"
+          >
             <span className="truncate">{title}</span>
             <ArrowRightCircleIcon />
           </Link>
