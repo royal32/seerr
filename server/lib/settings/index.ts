@@ -589,7 +589,7 @@ class Settings {
           schedule: '0 0 5 * * *',
         },
         'download-sync': {
-          schedule: '0 * * * * *',
+          schedule: '*/15 * * * * *',
         },
         'download-sync-reset': {
           schedule: '0 0 1 * * *',
