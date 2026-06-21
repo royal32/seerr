@@ -677,7 +677,7 @@ const TvRequestModal = ({
                             {!mediaSeason &&
                               seasonRequest?.status ===
                                 MediaRequestStatus.PENDING && (
-                                <Badge badgeType="warning">
+                                <Badge badgeType="requested">
                                   {intl.formatMessage(globalMessages.pending)}
                                 </Badge>
                               )}
@@ -686,7 +686,7 @@ const TvRequestModal = ({
                                 MediaRequestStatus.APPROVED) ||
                               mediaSeason?.[is4k ? 'status4k' : 'status'] ===
                                 MediaStatus.PROCESSING) && (
-                              <Badge badgeType="primary">
+                              <Badge badgeType="requested">
                                 {intl.formatMessage(globalMessages.requested)}
                               </Badge>
                             )}

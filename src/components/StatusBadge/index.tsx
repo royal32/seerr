@@ -297,7 +297,7 @@ const StatusBadge = ({
           }}
         >
           <Badge
-            badgeType="primary"
+            badgeType={inProgress ? 'primary' : 'requested'}
             href={mediaLink}
             className={`${
               inProgress && 'relative !bg-gray-700/80 !px-0 hover:!bg-gray-700'
@@ -353,7 +353,7 @@ const StatusBadge = ({
     case MediaStatus.PENDING:
       return (
         <Tooltip content={mediaLinkDescription}>
-          <Badge badgeType="warning" href={mediaLink}>
+          <Badge badgeType="requested" href={mediaLink}>
             {intl.formatMessage(is4k ? messages.status4k : messages.status, {
               status: intl.formatMessage(globalMessages.pending),
             })}

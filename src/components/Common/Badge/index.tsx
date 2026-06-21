@@ -8,6 +8,7 @@ interface BadgeProps {
     | 'danger'
     | 'warning'
     | 'success'
+    | 'requested'
     | 'dark'
     | 'light';
   className?: string;
@@ -50,6 +51,14 @@ const Badge = (
       );
       if (href) {
         badgeStyle.push('hover:bg-green-500');
+      }
+      break;
+    case 'requested':
+      badgeStyle.push(
+        'bg-lime-400/90 border border-lime-300 !text-lime-950'
+      );
+      if (href) {
+        badgeStyle.push('hover:bg-lime-300');
       }
       break;
     case 'dark':

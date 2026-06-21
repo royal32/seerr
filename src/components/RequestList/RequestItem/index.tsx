@@ -518,7 +518,7 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
                 requestData.media[requestData.is4k ? 'status4k' : 'status'] ===
                   MediaStatus.DELETED ? (
                 <Badge
-                  badgeType="warning"
+                  badgeType="requested"
                   href={`/${requestData.type}/${requestData.media.tmdbId}?manage=1`}
                 >
                   {intl.formatMessage(globalMessages.pending)}

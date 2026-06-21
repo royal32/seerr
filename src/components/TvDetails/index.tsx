@@ -882,7 +882,7 @@ const TvDetails = ({ tv }: TvDetailsProps) => {
                               mSeason?.status === MediaStatus.DELETED)) && (
                             <>
                               <div className="hidden md:flex">
-                                <Badge badgeType="primary">
+                                <Badge badgeType="requested">
                                   {intl.formatMessage(globalMessages.requested)}
                                 </Badge>
                               </div>
@@ -898,7 +898,7 @@ const TvDetails = ({ tv }: TvDetailsProps) => {
                             mSeason?.status === MediaStatus.PENDING) && (
                             <>
                               <div className="hidden md:flex">
-                                <Badge badgeType="warning">
+                                <Badge badgeType="requested">
                                   {intl.formatMessage(globalMessages.pending)}
                                 </Badge>
                               </div>
@@ -963,7 +963,7 @@ const TvDetails = ({ tv }: TvDetailsProps) => {
                             show4k && (
                               <>
                                 <div className="hidden md:flex">
-                                  <Badge badgeType="primary">
+                                  <Badge badgeType="requested">
                                     {intl.formatMessage(messages.status4k, {
                                       status: intl.formatMessage(
                                         globalMessages.requested
@@ -985,7 +985,7 @@ const TvDetails = ({ tv }: TvDetailsProps) => {
                             show4k && (
                               <>
                                 <div className="hidden md:flex">
-                                  <Badge badgeType="warning">
+                                  <Badge badgeType="requested">
                                     {intl.formatMessage(messages.status4k, {
                                       status: intl.formatMessage(
                                         globalMessages.pending

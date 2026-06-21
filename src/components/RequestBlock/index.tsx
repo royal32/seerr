@@ -220,7 +220,7 @@ const RequestBlock = ({ request, onUpdate }: RequestBlockProps) => {
                 </Badge>
               )}
               {request.status === MediaRequestStatus.PENDING && (
-                <Badge badgeType="warning">
+                <Badge badgeType="requested">
                   {intl.formatMessage(globalMessages.pending)}
                 </Badge>
               )}

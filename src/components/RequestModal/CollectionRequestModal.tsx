@@ -483,7 +483,7 @@ const CollectionRequestModal = ({
                             {!partMedia &&
                               partRequest?.status ===
                                 MediaRequestStatus.PENDING && (
-                                <Badge badgeType="warning">
+                                <Badge badgeType="requested">
                                   {intl.formatMessage(globalMessages.pending)}
                                 </Badge>
                               )}
@@ -492,7 +492,7 @@ const CollectionRequestModal = ({
                                 MediaRequestStatus.APPROVED) ||
                               partMedia?.[is4k ? 'status4k' : 'status'] ===
                                 MediaStatus.PROCESSING) && (
-                              <Badge badgeType="primary">
+                              <Badge badgeType="requested">
                                 {intl.formatMessage(globalMessages.requested)}
                               </Badge>
                             )}

@@ -1,9 +1,15 @@
+import Spinner from '@app/assets/spinner.svg';
 import ButtonWithDropdown from '@app/components/Common/ButtonWithDropdown';
 import RequestModal from '@app/components/RequestModal';
+import useToasts from '@app/hooks/useToasts';
 import useSettings from '@app/hooks/useSettings';
 import { Permission, useUser } from '@app/hooks/useUser';
 import globalMessages from '@app/i18n/globalMessages';
 import defineMessages from '@app/utils/defineMessages';
+import {
+  hasSingleQualityProfile,
+  submitMediaRequest,
+} from '@app/utils/requestHelpers';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import {
   CheckIcon,
@@ -14,7 +20,7 @@ import { MediaRequestStatus, MediaStatus } from '@server/constants/media';
 import type Media from '@server/entity/Media';
 import type { MediaRequest } from '@server/entity/MediaRequest';
 import axios from 'axios';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { mutate } from 'swr';
 
@@ -35,6 +41,8 @@ const messages = defineMessages('components.RequestButton', {
     'Approve {requestCount, plural, one {4K Request} other {{requestCount} 4K Requests}}',
   decline4krequests:
     'Decline {requestCount, plural, one {4K Request} other {{requestCount} 4K Requests}}',
+  requestSuccess: 'Request submitted successfully!',
+  requesterror: 'Something went wrong while submitting the request.',
 });
 
 interface ButtonOption {
@@ -64,9 +72,13 @@ const RequestButton = ({
   const intl = useIntl();
   const settings = useSettings();
   const { user, hasPermission } = useUser();
+  const { addToast } = useToasts();
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showRequest4kModal, setShowRequest4kModal] = useState(false);
   const [editRequest, setEditRequest] = useState(false);
+  const [requestingButtonId, setRequestingButtonId] = useState<string | null>(
+    null
+  );
 
   // All pending requests
   const activeRequests = media?.requests.filter(
@@ -121,6 +133,66 @@ const RequestButton = ({
     onUpdate();
     mutate('/api/v1/request/count');
   };
+
+  const requestDirectlyOrOpenModal = useCallback(
+    async (is4k = false) => {
+      const buttonId = is4k ? 'request4k' : 'request';
+      const openModal = () => {
+        setEditRequest(false);
+        if (is4k) {
+          setShowRequest4kModal(true);
+        } else {
+          setShowRequestModal(true);
+        }
+      };
+
+      if (mediaType !== 'movie') {
+        openModal();
+        return;
+      }
+
+      setRequestingButtonId(buttonId);
+
+      try {
+        let shouldSkipModal = false;
+
+        try {
+          shouldSkipModal = await hasSingleQualityProfile({
+            mediaType: 'movie',
+            is4k,
+          });
+        } catch {
+          openModal();
+          return;
+        }
+
+        if (!shouldSkipModal) {
+          openModal();
+          return;
+        }
+
+        await submitMediaRequest({
+          tmdbId,
+          mediaType: 'movie',
+          is4k,
+        });
+
+        addToast(intl.formatMessage(messages.requestSuccess), {
+          appearance: 'success',
+          autoDismiss: true,
+        });
+        onUpdate();
+      } catch {
+        addToast(intl.formatMessage(messages.requesterror), {
+          appearance: 'error',
+          autoDismiss: true,
+        });
+      } finally {
+        setRequestingButtonId(null);
+      }
+    },
+    [addToast, intl, mediaType, onUpdate, tmdbId]
+  );
 
   const buttons: ButtonOption[] = [];
 
@@ -284,12 +356,16 @@ const RequestButton = ({
   ) {
     buttons.push({
       id: 'request',
-      text: intl.formatMessage(globalMessages.request),
+      text: intl.formatMessage(
+        requestingButtonId === 'request'
+          ? globalMessages.requesting
+          : globalMessages.request
+      ),
       action: () => {
-        setEditRequest(false);
-        setShowRequestModal(true);
+        requestDirectlyOrOpenModal();
       },
-      svg: <ArrowDownTrayIcon />,
+      svg:
+        requestingButtonId === 'request' ? <Spinner /> : <ArrowDownTrayIcon />,
     });
   } else if (
     mediaType === 'tv' &&
@@ -331,12 +407,20 @@ const RequestButton = ({
   ) {
     buttons.push({
       id: 'request4k',
-      text: intl.formatMessage(globalMessages.request4k),
+      text: intl.formatMessage(
+        requestingButtonId === 'request4k'
+          ? globalMessages.requesting
+          : globalMessages.request4k
+      ),
       action: () => {
-        setEditRequest(false);
-        setShowRequest4kModal(true);
+        requestDirectlyOrOpenModal(true);
       },
-      svg: <ArrowDownTrayIcon />,
+      svg:
+        requestingButtonId === 'request4k' ? (
+          <Spinner />
+        ) : (
+          <ArrowDownTrayIcon />
+        ),
     });
   } else if (
     mediaType === 'tv' &&
@@ -399,6 +483,7 @@ const RequestButton = ({
           </>
         }
         onClick={buttonOne.action}
+        disabled={!!requestingButtonId}
         className="ml-2"
       >
         {others && others.length > 0

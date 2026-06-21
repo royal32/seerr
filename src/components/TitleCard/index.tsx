@@ -12,6 +12,10 @@ import useToasts from '@app/hooks/useToasts';
 import { Permission, UserType, useUser } from '@app/hooks/useUser';
 import globalMessages from '@app/i18n/globalMessages';
 import defineMessages from '@app/utils/defineMessages';
+import {
+  hasSingleQualityProfile,
+  submitMediaRequest,
+} from '@app/utils/requestHelpers';
 import { withProperties } from '@app/utils/typeHelpers';
 import { Transition } from '@headlessui/react';
 import {
@@ -21,6 +25,7 @@ import {
   MinusCircleIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
+import { CheckIcon } from '@heroicons/react/24/solid';
 import { MediaStatus } from '@server/constants/media';
 import type { Watchlist } from '@server/entity/Watchlist';
 import type { MediaType } from '@server/models/Search';
@@ -53,6 +58,8 @@ const messages = defineMessages('components.TitleCard', {
     '<strong>{title}</strong> Removed from watchlist  successfully!',
   watchlistCancel: 'watchlist for <strong>{title}</strong> canceled.',
   watchlistError: 'Something went wrong. Please try again.',
+  requestSuccess: '<strong>{title}</strong> requested successfully!',
+  requestError: 'Something went wrong while submitting the request.',
 });
 
 const TitleCard = ({
@@ -75,6 +82,7 @@ const TitleCard = ({
   const [currentStatus, setCurrentStatus] = useState(status);
   const [showDetail, setShowDetail] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
   const { addToast } = useToasts();
   const [toggleWatchlist, setToggleWatchlist] =
     useState<boolean>(!isAddedToWatchlist);
@@ -99,6 +107,66 @@ const TitleCard = ({
     (status: boolean) => setIsUpdating(status),
     []
   );
+
+  const requestDirectly = useCallback(async () => {
+    setIsRequesting(true);
+
+    try {
+      let shouldSkipModal = false;
+
+      if (mediaType === 'movie') {
+        try {
+          shouldSkipModal = await hasSingleQualityProfile({
+            mediaType: 'movie',
+          });
+        } catch {
+          setShowRequestModal(true);
+          return;
+        }
+      }
+
+      if (!shouldSkipModal) {
+        setShowRequestModal(true);
+        return;
+      }
+
+      await submitMediaRequest({
+        tmdbId: id,
+        mediaType: 'movie',
+      });
+
+      setCurrentStatus(
+        hasPermission(
+          [
+            Permission.MANAGE_REQUESTS,
+            Permission.AUTO_APPROVE,
+            Permission.AUTO_APPROVE_MOVIE,
+          ],
+          { type: 'or' }
+        )
+          ? MediaStatus.PROCESSING
+          : MediaStatus.PENDING
+      );
+      setShowDetail(false);
+      mutateParent?.();
+      addToast(
+        <span>
+          {intl.formatMessage(messages.requestSuccess, {
+            title,
+            strong: (msg: React.ReactNode) => <strong>{msg}</strong>,
+          })}
+        </span>,
+        { appearance: 'success', autoDismiss: true }
+      );
+    } catch {
+      addToast(intl.formatMessage(messages.requestError), {
+        appearance: 'error',
+        autoDismiss: true,
+      });
+    } finally {
+      setIsRequesting(false);
+    }
+  }, [addToast, hasPermission, id, intl, mediaType, mutateParent, title]);
 
   const closeBlocklistModal = useCallback(
     () => setShowBlocklistModal(false),
@@ -313,6 +381,10 @@ const TitleCard = ({
   const showHideButton = hasPermission([Permission.MANAGE_BLOCKLIST], {
     type: 'or',
   });
+  const showRequestedButton =
+    mediaType === 'movie' &&
+    (currentStatus === MediaStatus.PENDING ||
+      (currentStatus === MediaStatus.PROCESSING && !inProgress));
 
   return (
     <div
@@ -566,17 +638,33 @@ const TitleCard = ({
                       buttonSize="sm"
                       onClick={(e) => {
                         e.preventDefault();
-                        setShowRequestModal(true);
+                        requestDirectly();
                       }}
+                      disabled={isRequesting}
                       className="h-7 w-full"
                     >
-                      <ArrowDownTrayIcon />
-                      <span>{intl.formatMessage(globalMessages.request)}</span>
+                      {isRequesting ? <Spinner /> : <ArrowDownTrayIcon />}
+                      <span>
+                        {intl.formatMessage(
+                          isRequesting
+                            ? globalMessages.requesting
+                            : globalMessages.request
+                        )}
+                      </span>
                     </Button>
                   )}
               </div>
             </div>
           </Transition>
+          {showRequestedButton && (
+            <Link
+              href={`/movie/${id}`}
+              className="absolute bottom-2 left-2 right-2 z-50 inline-flex h-7 items-center justify-center rounded-md border border-lime-300 bg-lime-400/90 px-2 text-xs font-medium leading-5 text-lime-950 shadow-md transition duration-150 ease-in-out hover:bg-lime-300 focus:outline-none focus:ring-2 focus:ring-lime-300"
+            >
+              <CheckIcon className="mr-1 h-4 w-4" />
+              <span>{intl.formatMessage(globalMessages.requested)}</span>
+            </Link>
+          )}
         </div>
       </div>
     </div>

@@ -34,7 +34,9 @@ const StatusBadgeMini = ({
   switch (status) {
     case MediaStatus.PROCESSING:
       badgeStyle.push(
-        'bg-indigo-500/80 border-indigo-400 ring-indigo-400 text-indigo-100'
+        inProgress
+          ? 'bg-indigo-500/80 border-indigo-400 ring-indigo-400 text-indigo-100'
+          : 'bg-lime-400/90 border-lime-300 ring-lime-300 text-lime-950'
       );
       indicatorIcon = <ClockIcon />;
       break;
@@ -46,7 +48,7 @@ const StatusBadgeMini = ({
       break;
     case MediaStatus.PENDING:
       badgeStyle.push(
-        'bg-yellow-500/80 border-yellow-400 ring-yellow-400 text-yellow-100'
+        'bg-lime-400/90 border-lime-300 ring-lime-300 text-lime-950'
       );
       indicatorIcon = <BellIcon />;
       break;
